@@ -9,7 +9,9 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.cordova.CallbackContext;
@@ -104,7 +106,7 @@ public class ConnectPlugin extends CordovaPlugin {
 	@Override
 	public void onResume(boolean multitasking) {
 		super.onResume(multitasking);
-		// Developers can observe how frequently users activate their app by logging an app activation event. 
+		// Developers can observe how frequently users activate their app by logging an app activation event.
 		AppEventsLogger.activateApp(cordova.getActivity());
 	}
 
@@ -116,7 +118,7 @@ public class ConnectPlugin extends CordovaPlugin {
 	}
 
 	@Override
-	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+	public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
 
 		if (action.equals("login")) {
 			Log.d(TAG, "login FB");
@@ -219,7 +221,24 @@ public class ConnectPlugin extends CordovaPlugin {
 			}
 			return true;
 		} else if (action.equals("getLoginStatus")) {
-			callbackContext.success(getResponse());
+      Session session = Session.getActiveSession();
+      if (this.userID == null && session != null && session.isOpened()) {
+        getUserInfo(session, new Request.GraphUserCallback() {
+          @Override
+          public void onCompleted(GraphUser user, Response response) {
+            FacebookRequestError error = response.getError();
+            if (error != null) {
+              callbackContext.error(errorToJson(error));
+              return;
+            }
+            userID = user.getId();
+            callbackContext.success(getResponse());
+            loginContext = null;
+          }
+        });
+      } else {
+        callbackContext.success(getResponse());
+      }
 			return true;
 		} else if (action.equals("getAccessToken")) {
 			Session session = Session.getActiveSession();
@@ -410,7 +429,7 @@ public class ConnectPlugin extends CordovaPlugin {
 			graphPath = args.getString(0);
 
 			JSONArray arr = args.getJSONArray(1);
-			
+
 			final List<String> permissionsList = new ArrayList<String>();
 			for (int i = 0; i < arr.length(); i++) {
 				permissionsList.add(arr.getString(i));
@@ -461,23 +480,10 @@ public class ConnectPlugin extends CordovaPlugin {
 		return false;
 	}
 
-	private void getUserInfo(final Session session) {
+	private void getUserInfo(Session session, Request.GraphUserCallback callback) {
 		if (cordova != null) {
-			Request.newMeRequest(session, new Request.GraphUserCallback() {
-
-				@Override
-				public void onCompleted(GraphUser user, Response response) {
-					// Create a new result with response data
-					if (loginContext != null) {
-						GraphObject graphObject = response.getGraphObject();
-						Log.d(TAG, "returning login object " + graphObject.getInnerJSONObject().toString());
-						userID = user.getId();
-						loginContext.success(getResponse());
-						loginContext = null;
-					}
-				}
-			}).executeAsync();
-		}
+			Request.newMeRequest(session, callback).executeAsync();
+    }
 	}
 
 	private void makeGraphCall() {
@@ -499,7 +505,7 @@ public class ConnectPlugin extends CordovaPlugin {
 				}
 			}
 		};
-		
+
 		//If you're using the paging URLs they will be URLEncoded, let's decode them.
 		try {
 			graphPath = URLDecoder.decode(graphPath, "UTF-8");
@@ -534,17 +540,34 @@ public class ConnectPlugin extends CordovaPlugin {
 	 * Handles session state changes
 	 */
 	private void onSessionStateChange(SessionState state, Exception exception) {
-		final Session session = Session.getActiveSession();
-		// Check if the session is open
-		if (state.isOpened()) {
-			if (loginContext != null) {
-				// Get user info
-				getUserInfo(session);
-			} else if (graphContext != null) {
-				// Make the graph call
-				makeGraphCall();
-			}
-		}
+    if (!state.isOpened()) {
+      return;
+    }
+    if (loginContext == null) {
+      if (graphContext != null) {
+        makeGraphCall();
+      }
+      return;
+    }
+    getUserInfo(Session.getActiveSession(), new Request.GraphUserCallback() {
+      @Override
+      public void onCompleted(GraphUser user, Response response) {
+        if (loginContext == null) {
+          userID = user.getId();
+          return;
+        }
+        FacebookRequestError error = response.getError();
+        if (error != null) {
+          loginContext.error(errorToJson(error));
+          return;
+        }
+        GraphObject graphObject = response.getGraphObject();
+        Log.d(TAG, "returning login object " + graphObject.getInnerJSONObject().toString());
+        userID = user.getId();
+        loginContext.success(getResponse());
+        loginContext = null;
+      }
+    });
 	}
 
 	/*
@@ -553,7 +576,7 @@ public class ConnectPlugin extends CordovaPlugin {
 	private boolean isPublishPermission(String permission) {
 		return permission != null && (permission.startsWith(PUBLISH_PERMISSION_PREFIX) || permission.startsWith(MANAGE_PERMISSION_PREFIX) || OTHER_PUBLISH_PERMISSIONS.contains(permission));
 	}
-	
+
 	/**
 	 * Create a Facebook Response object that matches the one for the Javascript SDK
 	 * @return JSONObject - the response object
@@ -584,19 +607,28 @@ public class ConnectPlugin extends CordovaPlugin {
         try {
             return new JSONObject(response);
         } catch (JSONException e) {
-           
+
             e.printStackTrace();
         }
         return new JSONObject();
-    }
-	
+  }
+
+  private static JSONObject errorToJson(FacebookRequestError error) {
+      Map<String, Object> errorMap = new HashMap<String, Object>();
+      errorMap.put("status", "error");
+      errorMap.put("errorCode", error.getErrorCode());
+      errorMap.put("errorType", error.getErrorType());
+      errorMap.put("errorMessage", error.getErrorMessage());
+      return new JSONObject(errorMap);
+  }
+
 	private class WebDialogBuilderRunnable implements Runnable {
 		private Context context;
 		private Session session;
 		private String method;
 		private Bundle paramBundle;
 		private OnCompleteListener dialogCallback;
-		
+
 		public WebDialogBuilderRunnable(Context context, Session session, String method, Bundle paramBundle, OnCompleteListener dialogCallback) {
 			this.context = context;
 			this.session = session;
