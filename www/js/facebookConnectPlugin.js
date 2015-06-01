@@ -43,6 +43,12 @@ if (!window.cordova) {
             if (!options.href) {
                 options.href = "";
             }
+            if (!options.link) {
+                options.link = "";
+            }
+            if (!options.ref) {
+                options.ref = "";
+            }
             if (!options.picture) {
                 options.picture = "";
             }
