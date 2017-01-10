@@ -1,4 +1,5 @@
 *.DS_Store
+*.sw?
 test/www/*.js
 *.pbxuser
 !default.pbxuser

@@ -10,6 +10,13 @@
       "browser"
     ]
   },
+  "scripts": {
+    "prepublish": "scripts/prepublish.sh"
+  },
+  "devDependencies": {
+    "requirejs": "2.x",
+    "rimraf": "2.x"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/jeduan/cordova-plugin-facebook4"

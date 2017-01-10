@@ -1,3 +1,4 @@
+(function(exports, define) { this.facebookConnectPlugin = exports; 
 /* globals */
 var __fbSdkReady = false;
 var __fbCallbacks = [];
@@ -166,3 +167,12 @@ if (window.location.protocol === "file:") {
       fjs.parentNode.insertBefore(js, fjs);
   }(document, 'script', 'facebook-jssdk'));
 }
+;
+define("facebookConnectPlugin", (function (global) {
+    return function () {
+        var ret, fn;
+        return ret || global.facebookConnectPlugin;
+    };
+}(this)));
+
+})({}, function(symbol, builder) { return (window[symbol] = window[symbol] || builder()); });
