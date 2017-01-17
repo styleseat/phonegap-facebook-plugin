@@ -1,5 +1,5 @@
 (function(exports, define) { this.facebookConnectPlugin = exports; 
-/* globals */
+/* module globals */
 var __fbSdkReady = false;
 var __fbCallbacks = [];
 /* */
@@ -12,9 +12,9 @@ exports.getLoginStatus = function getLoginStatus (s, f) {
   }
 
   FB.getLoginStatus(function (response) {
-    s(response)
-  })
-}
+    s(response);
+  });
+};
 
 exports.showDialog = function showDialog (options, s, f) {
   if (!__fbSdkReady) {
@@ -23,22 +23,23 @@ exports.showDialog = function showDialog (options, s, f) {
     });
   }
 
-  options.name = options.name || ''
-  options.message = options.message || ''
-  options.caption = options.caption || ''
-  options.description = options.description || ''
-  options.href = options.href || ''
-  options.picture = options.picture || ''
-  options.quote = options.quote || ''
+  options.name = options.name || '';
+  options.message = options.message || '';
+  options.caption = options.caption || '';
+  options.description = options.description || '';
+  options.href = options.href || '';
+  options.picture = options.picture || '';
+  options.quote = options.quote || '';
 
   FB.ui(options, function (response) {
     if (response && (response.request || !response.error_code)) {
-      s(response)
-      return
+      s(response);
+      return;
     }
-    f(response.message)
-  })
-}
+    f(response.message);
+  });
+};
+
 // Attach this to a UI element, this requires user interaction.
 exports.login = function login (permissions, s, f) {
   if (!__fbSdkReady) {
@@ -47,33 +48,33 @@ exports.login = function login (permissions, s, f) {
     });
   }
   // JS SDK takes an object here but the native SDKs use array.
-  var options = {}
+  var options = {};
   if (permissions && permissions.length > 0) {
-    var index = permissions.indexOf('rerequest')
+    var index = permissions.indexOf('rerequest');
     if (index > -1) {
-      permissions.splice(index, 1)
-      options.auth_type = 'rerequest'
+      permissions.splice(index, 1);
+      options.auth_type = 'rerequest';
     }
-    options.scope = permissions.join(',')
+    options.scope = permissions.join(',');
   }
 
   FB.login(function (response) {
     if (response.authResponse) {
-      s(response)
+      s(response);
     } else {
-      f(response.status.message)
+      f(response.status.message);
     }
-  }, options)
-}
+  }, options);
+};
 
 exports.getAccessToken = function getAccessToken (s, f) {
-  var response = FB.getAccessToken()
+  var response = FB.getAccessToken();
   if (response) {
-    s(response)
-    return
+    s(response);
+    return;
   }
-  f('NO_TOKEN')
-}
+  f('NO_TOKEN');
+};
 
 exports.logEvent = function logEvent (eventName, params, valueToSum, s, f) {
   if (!__fbSdkReady) {
@@ -85,7 +86,7 @@ exports.logEvent = function logEvent (eventName, params, valueToSum, s, f) {
   FB.AppEvents.logEvent(eventName, valueToSum, params);
 
   if(s) s();
-}
+};
 
 exports.logPurchase = function logPurchase (value, currency, s, f) {
   if (!__fbSdkReady) {
@@ -97,12 +98,12 @@ exports.logPurchase = function logPurchase (value, currency, s, f) {
   FB.AppEvents.logPurchase(value, currency);
 
   if(s) s();
-}
+};
 
 exports.appInvite = function appInvite (options, s, f) {
   // App Invites are not avaliable in JS.
-  if(s) s()
-}
+  if(s) s();
+};
 
 exports.logout = function logout (s, f) {
   if (!__fbSdkReady) {
@@ -112,9 +113,9 @@ exports.logout = function logout (s, f) {
   }
 
   FB.logout(function (response) {
-    s(response)
-  })
-}
+    s(response);
+  });
+};
 
 exports.api = function api (graphPath, permissions, s, f) {
   if (!__fbSdkReady) {
@@ -126,12 +127,12 @@ exports.api = function api (graphPath, permissions, s, f) {
   // JS API does not take additional permissions
   FB.api(graphPath, function (response) {
     if (response.error) {
-      f(response)
+      f(response);
     } else {
-      s(response)
+      s(response);
     }
-  })
-}
+  });
+};
 
 exports.init = function init(options) {
   function fbInit() {
@@ -154,7 +155,7 @@ exports.init = function init(options) {
   } else {
     window.fbAsyncInit = fbInit;
   }
-}
+};
 
 if (window.location.protocol === "file:") {
   console.warn("Facebook JS SDK is not supported when using file:// protocol");

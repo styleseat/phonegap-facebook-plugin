@@ -34,12 +34,14 @@ requirejs.optimize({
   },
   optimize: 'none'
 }, function(buildResult) {
+  var code = fs.readFileSync(path.join(BUILD_DIR, PLUGIN_FILENAME), 'utf8');
   var minified = uglifyjs.minify(
-    [path.join(BUILD_DIR, PLUGIN_FILENAME)],
+    {[MINIFIED_FILENAME]: code},
     {
       outSourceMap: MINIFIED_FILENAME + ".map",
-      outFileName: MINIFIED_FILENAME
-  }  );
+      fromString: true
+    }
+  );
   fs.writeFileSync(path.join(BUILD_DIR, MINIFIED_FILENAME), minified.code)
   fs.writeFileSync(path.join(BUILD_DIR, MINIFIED_FILENAME + '.map'), minified.map);
 });

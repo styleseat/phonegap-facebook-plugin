@@ -11,11 +11,14 @@
     ]
   },
   "scripts": {
-    "prepublish": "scripts/prepublish.sh"
+    "prepublish": "scripts/prepublish.sh",
+    "test": "jshint www/"
   },
   "devDependencies": {
     "requirejs": "2.x",
-    "rimraf": "2.x"
+    "rimraf": "2.x",
+    "jshint": "2.x",
+    "uglify-js": "2.x"
   },
   "repository": {
     "type": "git",
