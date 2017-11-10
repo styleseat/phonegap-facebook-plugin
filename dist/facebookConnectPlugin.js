@@ -41,14 +41,14 @@ exports.showDialog = function showDialog (options, s, f) {
 };
 
 // Attach this to a UI element, this requires user interaction.
-exports.login = function login (permissions, s, f) {
+exports.login = function login (permissions, s, f, options) {
   if (!__fbSdkReady) {
     return __fbCallbacks.push(function() {
       login(permissions, s, f);
     });
   }
   // JS SDK takes an object here but the native SDKs use array.
-  var options = {};
+  options || (options = {});
   if (permissions && permissions.length > 0) {
     var index = permissions.indexOf('rerequest');
     if (index > -1) {
